@@ -1,3 +1,5 @@
+import java.text.DecimalFormat;
+
 /**
  * Created by robertseedorf on 3/10/16.
  */
@@ -181,6 +183,17 @@ class Point {
         this.y = y;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        Point p = (Point) o;
+        DecimalFormat df = new DecimalFormat("###.#######");      /*Implied that closest degree of precision is
+        the practical limit of commercial surveying techniques*/
+        if(df.format(p.x).equals(df.format(this.x)) && df.format(p.y).equals(df.format(this.y))) {
+            return true;
+        }
+        return false;
+    }
+
     public String toString() {
         return "(" + this.x + ", " + this.y + ")";
     }
@@ -209,6 +222,18 @@ class Line {
 
     public String toString() {
         return " [" + start.toString() + ", " + end.toString() + "] ";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        Line l = (Line) o;
+        if(this.start.equals(l.start) && this.end.equals(l.end)) {
+            return true;
+        }
+        if(this.start.equals(l.end) && this.end.equals(l.start)) {
+            return true;
+        }
+        return false;
     }
 }
 
