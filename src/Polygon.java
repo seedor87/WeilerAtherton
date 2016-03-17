@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.EmptyStackException;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Created by robertseedorf on 3/11/16.
@@ -17,36 +14,10 @@ public class Polygon {
     public Polygon(List<Point> points) {
         this.sides = new ArrayList<Line>();
 
-        Stack<Point> temp = new Stack<Point>();
-        for(Point p: points) {
-            temp.push(p);
+        for(int i = 0; i < points.size()-1; i++) {
+            addLine(new Line(points.get(i), points.get(i+1)));
         }
-
-        Point pointZero = temp.peek();
-        while(!temp.empty()) {
-            Point reserve = temp.pop();
-            try {
-                addPoint(reserve, temp.peek());
-            }
-            catch (EmptyStackException e) {
-                addPoint(reserve, pointZero);
-            }
-        }
-    }
-    
-    public Polygon(Stack<Point> points) {
-        this.sides = new ArrayList<Line>();
-
-        Point pointZero = points.peek();
-        while(!points.empty()) {
-            Point reserve = points.pop();
-            try {
-                addPoint(reserve, points.peek());
-            }
-            catch (EmptyStackException e) {
-                addPoint(reserve, pointZero);
-            }
-        }
+        addLine(new Line(points.get(points.size()-1), points.get(0)));
     }
 
     public Polygon() {

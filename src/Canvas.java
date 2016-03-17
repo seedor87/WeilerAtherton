@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 
 /**
@@ -19,6 +21,14 @@ public class Canvas extends JPanel{
         this.HEIGHT = height;
         this.WIDTH = width;
         SCALE = (HEIGHT / 60) * (WIDTH / 60);
+
+        JButton close = new JButton("Close");
+        close.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+        this.add(close);
     }
 
     public void paint(Graphics g) {
