@@ -185,6 +185,9 @@ class Point {
 
     @Override
     public boolean equals(Object o) {
+        if(o == null) {
+            return false;
+        }
         Point p = (Point) o;
         DecimalFormat df = new DecimalFormat("###.#######");      /*Implied that closest degree of precision is
         the practical limit of commercial surveying techniques*/

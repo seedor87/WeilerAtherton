@@ -1,8 +1,5 @@
 import javax.swing.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Stack;
+import java.util.*;
 
 /**
  * Created by robertseedorf on 3/11/16.
@@ -16,23 +13,25 @@ public class Driver {
     public static void main(String[] Args) {
 
         //create subject
-        Point A = new Point(3.0, 3.5);
-        Point B = new Point(-2.0, 3.5);
-        Point C = new Point(-0.5, 1.5);
-        Point D = new Point(0.5, 0.5);
-        Point E = new Point(3.0, 0.0);
+        Point A = new Point(3.0, 1.0);
+        Point B = new Point(1.0, 3.5);
+        Point C = new Point(0.0, 0.0);
+        Point D = new Point(1.0, -3.0);
+        Point E = new Point(1.0, 0.0);
         subject = new Polygon(Arrays.asList(A, B, C, D, E));
+        //subject = new Polygon(Arrays.asList(B, C, D, E, A));
 
         //create viewport, square
         Point F = new Point(2.0, 3.0);
         Point G = new Point(-1.0, 3.0);
         Point H = new Point(-1.0, -1.0);
         Point I = new Point(2.0, -1.0);
-        viewport = new Polygon(Arrays.asList(F, G, H, I));
+        //viewport = new Polygon(Arrays.asList(F, G, H, I));
+        //viewport = new Polygon(Arrays.asList(G, H, I, F));
+        //viewport = new Polygon(Arrays.asList(H, I, F, G));
 
         clipped = findClipped();
         renderWindow();
-        test4();
     }
 
     private static void renderWindow() {
@@ -49,7 +48,7 @@ public class Driver {
         System.out.println("Success");
     }
 
-    private static void test4() {
+    private static void test5() {
 
         IntersectioniFinder IF = new IntersectioniFinder();
 
@@ -83,19 +82,6 @@ public class Driver {
             }
         }
         Collections.reverse(subjectLines);
-
-        for(Line l: subjectLines) {
-            System.out.println(l);
-        }
-        System.out.println("=====");
-        int index = 2;
-        int sentinel = index;
-        do {
-            index++;
-            index = index % subjectLines.size();
-            System.out.println(subjectLines.get(index));
-        }
-        while(index != sentinel);
     }
 
     private static Polygon findClipped() {
@@ -104,7 +90,7 @@ public class Driver {
 
         ArrayList<Point> P = new ArrayList<Point>();        //Collection of points lying on perimeter of subject
         ArrayList<Point> Q = new ArrayList<Point>();        //Collection of points lying on perimeter of viewport
-        ArrayList<Point> Ie = new ArrayList<Point>();       //Collection of *entry* points of intersection
+        Stack<Point> Ie = new Stack<Point>();       //Collection of all points of intersection
         int intersectionCount = 0;
 
         ArrayList<Line> subjectLines = new ArrayList<Line>(subject.getSides());
@@ -117,16 +103,13 @@ public class Driver {
                 if(IF.checkIntersect(subjectLine, viewPortLine)) {
                     Point poi = IF.findPOI(subjectLine, viewPortLine);
                     P.add(poi);
-                    if(intersectionCount % 2 == 0) {    //Build Ie
-                        Ie.add(poi);
-                    }
+                    Ie.push(poi);        // build Ie
                     intersectionCount++;
                 }
             }
         }
 
         //Build Q
-        Collections.reverse(subjectLines);          //Be sure to iterate over the collection of subject lines in reverse
         for(Line viewPortLine: viewPortLines) {
             Q.add(viewPortLine.start);
             for(Line subjectLine: subjectLines) {
@@ -143,7 +126,48 @@ public class Driver {
         }
 
         Stack<Point> result = new Stack<Point>();
-        for (Point entry : Ie) {
+
+        Collections.reverse(Ie);
+        print(Q);
+
+        Point reserve, start, end, location;
+        reserve = Ie.peek();
+        location = reserve;
+        int index;
+        while(true) {
+            start = Ie.pop();
+            end = Ie.peek();
+            index = P.indexOf(location);
+            while(!location.equals(end)) {
+                result.push(location);
+                index++;
+                index = index % P.size();
+                location = P.get(index);
+            }
+            start = Ie.pop();
+            try {
+                end = Ie.peek();
+            }
+            catch(EmptyStackException e) {
+                break;
+            }
+            index = Q.indexOf(location);
+            while(!location.equals(end)) {
+                result.push(location);
+                index++;
+                index = index % Q.size();
+                location = Q.get(index);
+            }
+        }
+        index = Q.indexOf(location);
+        while(!location.equals(reserve)) {
+            result.push(location);
+            index++;
+            index = index % Q.size();
+            location = Q.get(index);
+        }
+
+       /* for (Point entry : Ie) {
             int index = P.indexOf(entry);
             int sentinel = index;
             result.push(P.get(index));
@@ -161,28 +185,14 @@ public class Driver {
                 result.push(Q.get(index));
             }
             while (index != sentinel && !(Q.get(index) instanceof PointOfIntersection));
-        }
+        }*/
         return new Polygon(result);
     }
-}
 
-    /*Stack<Point> result = new Stack<Point>();
-        for (Point entry : Ie) {
-        int index = P.indexOf(entry);
-        result.push(P.get(index));
-        do {
-        index++;
-        result.push(P.get(index));
-        }
-        while (!(P.get(index) instanceof PointOfIntersection));
-        index = Q.indexOf(P.get(index));
-        do {
-        index++;
-        result.push(Q.get(index));
-        }
-        while (!(Q.get(index) instanceof PointOfIntersection));
-        }
-        return new Polygon(result);*/
+    private static void print(Object o) {
+        System.out.println(o.toString());
+    }
+}
 
 
 
