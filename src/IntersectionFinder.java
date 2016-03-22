@@ -1,4 +1,5 @@
 import java.text.DecimalFormat;
+import java.util.Objects;
 
 /**
  * Created by robertseedorf on 3/10/16.
@@ -173,7 +174,7 @@ class IntersectioniFinder {
     }
 }
 
-class Point {
+class Point implements Comparable{
 
     public Double x;
     public Double y;
@@ -195,6 +196,18 @@ class Point {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        Point p = (Point) o;
+        if(this.x > p.x || this.y > p.y) {
+            return 1;
+        }
+        if(this.x < p.x || this.y < p.y) {
+            return -1;
+        }
+        return 0;
     }
 
     public String toString() {
