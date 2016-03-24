@@ -170,7 +170,22 @@ class IntersectioniFinder {
         if(val > 0) {
             return Orientation.RIGHT;               // then clockwise
         }
-        return Orientation.LEFT;                   // else counterclock wise
+        return Orientation.LEFT;                   // else counter clockwise
+    }
+
+    /**
+     * thsi method  wll return either point A or point B, whichever is closer to the point, target
+     * Using pythagorean theorem the distance between the points is determined and the closer pointis determined
+     * @param target control point
+     * @param A test subject first
+     * @param B test subject second
+     * @return Point closer to target, only A or B
+     */
+    public static Point closestPoint(Point target, Point A, Point B) {
+        double distTargetA, distTargetB;
+        distTargetA = Math.sqrt(Math.pow((target.x - A.x), 2) + Math.pow((target.y - A.y), 2));
+        distTargetB = Math.sqrt(Math.pow((target.x - B.x), 2) + Math.pow((target.y - B.y), 2));
+        return distTargetA > distTargetB ? B : A;
     }
 }
 

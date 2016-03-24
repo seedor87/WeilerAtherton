@@ -19,7 +19,6 @@ public class Driver {
         Point D = new Point(0.0, -3.0);
         Point E = new Point(1.0, 0.0);
         subject = new Polygon(Arrays.asList(A, B, C, D, E));
-        //subject = new Polygon(Arrays.asList(B, C, D, E, A));
 
         //create viewport, square
         Point F = new Point(2.0, 3.0);
@@ -27,8 +26,6 @@ public class Driver {
         Point H = new Point(-1.0, -1.0);
         Point I = new Point(2.0, -1.0);
         viewport = new Polygon(Arrays.asList(F, G, H, I));
-        //viewport = new Polygon(Arrays.asList(G, H, I, F));
-        //viewport = new Polygon(Arrays.asList(H, I, F, G));
 
         clipped = findClipped();
         renderWindow();
@@ -59,98 +56,31 @@ public class Driver {
         ArrayList<Line> subjectLines = new ArrayList<Line>(subject.getSides());
         ArrayList<Line> viewPortLines = new ArrayList<Line>(viewport.getSides());
 
-        // Construct P from subject, and viewport
-        for(Line subjectLine: subjectLines) {
-            P.add(subjectLine.start);
-            for(Line viewPortLine: viewPortLines) {
-                if(IF.checkIntersect(subjectLine, viewPortLine)) {
-                    Point poi = IF.findPOI(subjectLine, viewPortLine);
-                    P.add(poi);
-                    Ie.push(poi);        // build Ie in the mean while
-                }
-            }
-        }
-        Collections.reverse(Ie);
-
-        /*
-        Construct Q using new algorithm;
+         /*
+        Construct P
          */
-        Point corner;                       // Point representing cardinal corners of viewPort polygon
-        ArrayList<Point> storage ;          // ^emporary storage of only matching poi's
-
-        // Top right corner first
-        corner = viewPortLines.get(0).start;
-        storage = new ArrayList<Point>();
-        Q.add(corner);
-        for(Point p: Ie) {
-            if(corner.y.equals(p.y)) {
-                storage.add(p);
-            }
-        }
-        Collections.sort(storage);
-        Collections.reverse(storage);
-        Q.addAll(storage);
-
-        // top left corner next
-        corner = viewPortLines.get(1).start;
-        storage = new ArrayList<Point>();
-        Q.add(corner);
-        for(Point p: Ie) {
-            if(corner.x.equals(p.x)) {
-                storage.add(p);
-            }
-        }
-        Collections.sort(storage);
-        Collections.reverse(storage);
-        Q.addAll(storage);
-
-        // bottom left corner next
-        corner = viewPortLines.get(2).start;
-        storage = new ArrayList<Point>();
-        Q.add(corner);
-        for(Point p: Ie) {
-            if(corner.y.equals(p.y)) {
-                storage.add(p);
-            }
-        }
-        Collections.sort(storage);
-        Q.addAll(storage);
-
-        // bottom right corner last
-        corner = viewPortLines.get(3).start;
-        storage = new ArrayList<Point>();
-        Q.add(corner);
-        for(Point p: Ie) {
-            if(corner.x.equals(p.x)) {
-                storage.add(p);
-            }
-        }
-        Collections.sort(storage);
-        Q.addAll(storage);
-
-        print(Q);
-    }
-
-    private static Polygon findClipped() {
-
-        IntersectioniFinder IF = new IntersectioniFinder();
-
-        ArrayList<Point> P = new ArrayList<Point>();        //Collection of points lying on perimeter of subject
-        ArrayList<Point> Q = new ArrayList<Point>();        //Collection of points lying on perimeter of viewport
-        Stack<Point> Ie = new Stack<Point>();       //Collection of all points of intersection
-
-        ArrayList<Line> subjectLines = new ArrayList<Line>(subject.getSides());
-        ArrayList<Line> viewPortLines = new ArrayList<Line>(viewport.getSides());
-
-        //Build P
+        Collections.reverse(subjectLines);          // need to do this to get Ie in correct order
         for(Line subjectLine: subjectLines) {
-            P.add(subjectLine.start);
+            P.add(subjectLine.end);
+            int crossCount = 0;
             for(Line viewPortLine: viewPortLines) {
+                Point poi = null;
                 if(IF.checkIntersect(subjectLine, viewPortLine)) {
-                    Point poi = IF.findPOI(subjectLine, viewPortLine);
+                    //print(subjectLine + " " + viewPortLine + " : " + IF.findPOI(subjectLine, viewPortLine));
+                    poi = IF.findPOI(subjectLine, viewPortLine);
                     P.add(poi);
                     Ie.push(poi);        // build Ie
+                    crossCount++;
                 }
+                if(crossCount > 1) {
+                    Point closer = IF.closestPoint(subjectLine.end, poi, Ie.peek());
+                    if (closer.equals(poi)) {
+                        Point temp = Ie.pop();
+                        Ie.push(closer);
+                        Ie.push(temp);
+                    } else ;           // they are already in the correct order
+                }
+                crossCount = 0;
             }
         }
 
@@ -158,7 +88,7 @@ public class Driver {
         Construct Q using new algorithm;
          */
         Point corner;                       // Point representing cardinal corners of viewPort polygon
-        ArrayList<Point> storage ;          // ^emporary storage of only matching poi's
+        ArrayList<Point> storage ;          // temporary storage of only matching poi's
 
         // Top right corner first
         corner = viewPortLines.get(0).start;
@@ -210,22 +140,20 @@ public class Driver {
         Collections.sort(storage);
         Q.addAll(storage);
 
-        //If no intersecting region is found then return polygon of zero dimension
-        if(Ie.isEmpty()) {
-            return new Polygon();
-        }
+        Collections.reverse(P);
+        print(P);
+        print(Q);
+        print(Ie);
 
         Stack<Point> result = new Stack<Point>();
 
-        Collections.reverse(Ie);
-
-        Point reserve, start, end, location;
+        Point reserve, end, location;
         reserve = Ie.peek();
         location = reserve;
         int index;
         boolean flag = true;
         while(flag) {
-            start = Ie.pop();
+            Ie.pop();
             end = Ie.peek();
             index = P.indexOf(location);
             while(!location.equals(end)) {
@@ -234,7 +162,7 @@ public class Driver {
                 index = index % P.size();
                 location = P.get(index);
             }
-            start = Ie.pop();
+            Ie.pop();
             try {
                 end = Ie.peek();
             }
@@ -253,31 +181,141 @@ public class Driver {
             }
         }
 
-        // For posterity we save commemorate this code
-       /* for (Point entry : Ie) {
-            int index = P.indexOf(entry);
-            int sentinel = index;
-            result.push(P.get(index));
-            do {
+
+        print(result);
+    }
+
+    private static Polygon findClipped() {
+
+        IntersectioniFinder IF = new IntersectioniFinder();
+
+        ArrayList<Point> P = new ArrayList<Point>();        //Collection of points lying on perimeter of subject
+        ArrayList<Point> Q = new ArrayList<Point>();        //Collection of points lying on perimeter of viewport
+        Stack<Point> Ie = new Stack<Point>();       //Collection of all points of intersection
+
+        ArrayList<Line> subjectLines = new ArrayList<Line>(subject.getSides());
+        ArrayList<Line> viewPortLines = new ArrayList<Line>(viewport.getSides());
+
+        // Construct P from subject, and viewport
+        for(Line subjectLine: subjectLines) {
+            P.add(subjectLine.start);
+            for(Line viewPortLine: viewPortLines) {
+                if(IF.checkIntersect(subjectLine, viewPortLine)) {
+                    Point poi = IF.findPOI(subjectLine, viewPortLine);
+                    P.add(poi);
+                    Ie.push(poi);        // build Ie in the mean while
+                }
+            }
+        }
+        Collections.reverse(Ie);
+
+        /*
+        Construct Q using new algorithm;
+         */
+        Point corner;                       // Point representing cardinal corners of viewPort polygon
+        ArrayList<Point> storage ;          // temporary storage of only matching poi's
+
+        // Top right corner first
+        corner = viewPortLines.get(0).start;
+        storage = new ArrayList<Point>();
+        Q.add(corner);
+        for(Point p: Ie) {
+            if(corner.y.equals(p.y)) {
+                storage.add(p);
+            }
+        }
+        Collections.sort(storage);
+        Collections.reverse(storage);
+        Q.addAll(storage);
+
+        // top left corner next
+        corner = viewPortLines.get(1).start;
+        storage = new ArrayList<Point>();
+        Q.add(corner);
+        for(Point p: Ie) {
+            if(corner.x.equals(p.x)) {
+                storage.add(p);
+            }
+        }
+        Collections.sort(storage);
+        Collections.reverse(storage);
+        Q.addAll(storage);
+
+        // bottom left corner next
+        corner = viewPortLines.get(2).start;
+        storage = new ArrayList<Point>();
+        Q.add(corner);
+        for(Point p: Ie) {
+            if(corner.y.equals(p.y)) {
+                storage.add(p);
+            }
+        }
+        Collections.sort(storage);
+        Q.addAll(storage);
+
+        // bottom right corner last
+        corner = viewPortLines.get(3).start;
+        storage = new ArrayList<Point>();
+        Q.add(corner);
+        for(Point p: Ie) {
+            if(corner.x.equals(p.x)) {
+                storage.add(p);
+            }
+        }
+        Collections.sort(storage);
+        Q.addAll(storage);
+
+        print(P);
+        print(Q);
+        print(Ie);
+
+        //If no intersecting region is found then return polygon of zero dimension
+        if(Ie.isEmpty()) {
+            return new Polygon();
+        }
+
+        Stack<Point> result = new Stack<Point>();
+
+        Point reserve, end, location;
+        reserve = Ie.peek();
+        location = reserve;
+        int index;
+        boolean flag = true;
+        while(flag) {
+            Ie.pop();
+            end = Ie.peek();
+            index = P.indexOf(location);
+            while(!location.equals(end)) {
+                result.push(location);
                 index++;
                 index = index % P.size();
-                result.push(P.get(index));
+                location = P.get(index);
             }
-            while (index != sentinel && !(P.get(index) instanceof PointOfIntersection));
-            index = Q.indexOf(P.get(index));
-            sentinel = index;
-            do {
-                index++;
-                index = index % Q.size();
-                result.push(Q.get(index));
+            Ie.pop();
+            try {
+                end = Ie.peek();
             }
-            while (index != sentinel && !(Q.get(index) instanceof PointOfIntersection));
-        }*/
-        System.out.println(P);
-        System.out.println(Q);
-        System.out.println(result);
+            catch(EmptyStackException e) {
+                end = reserve;
+                flag = false;
+            }
+            finally {
+                index = Q.indexOf(location);
+                while (!location.equals(end)) {
+                    result.push(location);
+                    index++;
+                    index = index % Q.size();
+                    location = Q.get(index);
+                }
+            }
+        }
+
+        print(result);
+        print("---------------");
+
         return new Polygon(result);
     }
+
 
     private static void print(Object o) {
         System.out.println(o.toString());
