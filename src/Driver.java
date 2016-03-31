@@ -15,10 +15,17 @@ public class Driver {
         //create subject
         Point A = new Point(3.0, 1.0);
         Point B = new Point(1.0, 3.5);
-        Point C = new Point(0.0, 0.0);
+        Point C = new Point(0.1, 0.0);  // (-2.1, 0.0)
         Point D = new Point(0.0, -3.0);
-        Point E = new Point(1.0, 0.0);
+        Point E = new Point(1.0, 0.0);  // (3.0, 0.0)
         subject = new Polygon(Arrays.asList(A, B, C, D, E));
+
+        /*A = new Point(3.0, 2.0);
+        B = new Point(2.5, 2.0);
+        C = new Point(0.0, 4.0);
+        D = new Point(3.0, 0.0);
+        E = new Point(3.0, 2.0);
+        subject = new Polygon(Arrays.asList(A, B, C, D, E));*/
 
         //create viewport, square
         Point F = new Point(2.0, 3.0);
@@ -27,9 +34,9 @@ public class Driver {
         Point I = new Point(2.0, -1.0);
         viewport = new Polygon(Arrays.asList(F, G, H, I));
 
-        clipped = findClipped();
+        //clipped = findClipped();
+        clipped = test5();
         renderWindow();
-        test5();
     }
 
     private static void renderWindow() {
@@ -46,7 +53,7 @@ public class Driver {
         System.out.println("Success");
     }
 
-    private static void test5() {
+    private static Polygon test5() {
 
         IntersectioniFinder IF = new IntersectioniFinder();
 
@@ -66,21 +73,29 @@ public class Driver {
             for(Line viewPortLine: viewPortLines) {
                 Point poi = null;
                 if(IF.checkIntersect(subjectLine, viewPortLine)) {
-                    //print(subjectLine + " " + viewPortLine + " : " + IF.findPOI(subjectLine, viewPortLine));
                     poi = IF.findPOI(subjectLine, viewPortLine);
                     P.add(poi);
                     Ie.push(poi);        // build Ie
                     crossCount++;
                 }
                 if(crossCount > 1) {
-                    Point closer = IF.closestPoint(subjectLine.end, poi, Ie.peek());
-                    if (closer.equals(poi)) {
-                        Point temp = Ie.pop();
-                        Ie.push(closer);
-                        Ie.push(temp);
-                    } else ;           // they are already in the correct order
+                    Point top = Ie.pop();
+                    Point bottom = Ie.pop();
+                    print(top.equals(IF.closestPoint(P.get(P.size()-1), top, bottom)));
+                    if(top.equals(IF.closestPoint(subjectLine.end, top, bottom))) {
+                         Ie.push(top);
+                         Ie.push(bottom);
+                     }
+                    else {
+                         Ie.push(bottom);
+                         Ie.push(top);
+                        P.remove(bottom);
+                        P.remove(top);
+                        P.add(bottom);
+                        P.add(top);
+
+                     }
                 }
-                crossCount = 0;
             }
         }
 
@@ -183,6 +198,8 @@ public class Driver {
 
 
         print(result);
+
+        return new Polygon(result);
     }
 
     private static Polygon findClipped() {
